@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import { Heart, Stethoscope, Droplets } from "lucide-react";
 

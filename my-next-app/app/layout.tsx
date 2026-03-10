@@ -1,19 +1,6 @@
 import type { Metadata } from "next";
-import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import LayoutContent from "./LayoutContent";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-heading",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-body",
-});
 
 export const metadata: Metadata = {
   title: "HemaAI",
@@ -23,8 +10,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="scroll-smooth">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
+      </head>
       <body
-        className={`${poppins.variable} ${inter.variable} antialiased bg-[var(--color-background)] text-[var(--color-foreground)]`}
+        className="antialiased bg-[var(--color-background)] text-[var(--color-foreground)] font-sans"
       >
           <LayoutContent>{children}</LayoutContent>
       </body>

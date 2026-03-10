@@ -16,6 +16,7 @@ import Profile from '../patient/Profile/page'
 import Symptom from '@/components/Patient/Symptom'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import SymptomHistory from '@/components/Patient/SymptomHistory'
+import DonorSearch from '@/components/Patient/DonorSearch'
 import Link from 'next/link'
 
 const supabase = createSupabaseClient();
@@ -369,6 +370,10 @@ export default function PatientDashboard() {
 
       {activeTab === 'records' && (
         <SymptomHistory userId={userId ?? ''} />
+      )}
+
+      {activeTab === 'find-donors' && (
+        <DonorSearch />
       )}
 
       {activeTab === 'symptoms' && (

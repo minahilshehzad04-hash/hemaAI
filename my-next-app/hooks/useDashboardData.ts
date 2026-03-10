@@ -9,7 +9,7 @@ const supabase = createClient()
 // Cache for profiles to avoid duplicate requests
 const profileCache = new Map<string, any>()
 
-export function useDashboardData(userType: 'patient' | 'doctor') {
+export function useDashboardData(userType: 'patient' | 'doctor' | 'donor') {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -47,6 +47,12 @@ export function useDashboardData(userType: 'patient' | 'doctor') {
               .select('specialization, qualifications, profile_picture_url')
               .eq('user_id', userId)
               .maybeSingle()
+          : userType === 'donor'
+          ? supabase
+              .from('donor_profiles')
+              .select('blood_group, availability, city, profile_picture_url, contact_number')
+              .eq('user_id', userId)
+              .maybeSingle()
           : supabase
               .from('patient_profiles')
               .select('gender, dob, blood_group, profile_picture_url')
@@ -74,7 +80,10 @@ export function useDashboardData(userType: 'patient' | 'doctor') {
   }, [userType])
 
   // Optimized consultations fetch with batch processing
-  const fetchConsultations = useCallback(async (userId: string, userType: 'patient' | 'doctor') => {
+  const fetchConsultations = useCallback(async (userId: string, userType: 'patient' | 'doctor' | 'donor') => {
+    // Note: Donors might not have consultations in the same way, but keeping signature for now
+    if (userType === 'donor') return []
+    
     try {
       // Build query
       let query = supabase
@@ -163,6 +172,8 @@ export function useDashboardData(userType: 'patient' | 'doctor') {
       type: 'consultation',
       title: userType === 'doctor' 
         ? `Consultation with ${consultation.patient?.full_name || 'Patient'}`
+        : userType === 'donor'
+        ? `Donation Update`
         : `Consultation with Dr. ${consultation.doctor?.full_name || 'Doctor'}`,
       description: getConsultationStatusText(consultation.status, userType),
       time: consultation.created_at,

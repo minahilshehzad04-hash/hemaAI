@@ -58,11 +58,13 @@ export default function DonorProfile() {
           email: user.email || ''
         }))
 
-        let { data, error } = await supabase
+        const { data: fetchedData, error } = await supabase
           .from('donor_profiles')
           .select('*')
           .eq('user_id', user.id)
           .single()
+
+        let profileData = fetchedData
 
         // ✅ If no profile exists, try creating one
         if (error && error.code === 'PGRST116') {
@@ -75,8 +77,8 @@ export default function DonorProfile() {
               .from('donor_profiles')
               .insert({
                 user_id: user.id,
-                created_at: new Date(),
-                updated_at: new Date(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
                 is_active: true
               })
               .select()
@@ -95,7 +97,7 @@ export default function DonorProfile() {
           }
 
           if (newProfile) {
-            data = newProfile
+            profileData = newProfile
           } else if (insertError) {
             console.error('Failed to create donor profile:', insertError)
           }
@@ -105,15 +107,15 @@ export default function DonorProfile() {
         }
 
         // ✅ Populate profile data if available
-        if (data) {
-          setAvatarUrl(data.profile_picture_url || '')
-          setIsActive(data.is_active ?? true)
-          setPersonal((prev) => ({ ...prev, contact: data.contact_number || '' }))
+        if (profileData) {
+          setAvatarUrl(profileData.profile_picture_url || '')
+          setIsActive(profileData.is_active ?? true)
+          setPersonal((prev) => ({ ...prev, contact: profileData.contact_number || '' }))
           setDonorDetails({
-            blood_group: data.blood_group || '',
-            city: data.city || '',
-            availability: data.availability || '',
-            last_donation_date: data.last_donation_date || ''
+            blood_group: profileData.blood_group || '',
+            city: profileData.city || '',
+            availability: profileData.availability || '',
+            last_donation_date: profileData.last_donation_date || ''
           })
         }
       } catch (err) {
@@ -176,7 +178,7 @@ export default function DonorProfile() {
         availability: donorDetails.availability,
         last_donation_date: donorDetails.last_donation_date || null,
         profile_picture_url: avatarUrl,
-        updated_at: new Date(),
+        updated_at: new Date().toISOString(),
         is_active: isActive
       }
 
@@ -301,7 +303,7 @@ export default function DonorProfile() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <AuthInput value={personal.email} name="email" onChange={() => {}} disabled />
+                        <AuthInput value={personal.email} name="email" onChange={() => { }} disabled />
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>

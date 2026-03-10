@@ -1,6 +1,8 @@
 import React from 'react'
 import Hero from '@/components/General/Hero'
-import Home from '@/components/General/Home'
+import dynamic from 'next/dynamic'
+
+const Home = dynamic(() => import('@/components/General/Home'))
 
 function page() {
   return (

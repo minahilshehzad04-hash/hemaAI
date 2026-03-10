@@ -12,6 +12,10 @@ import {
   FileText,
   Activity,
   Stethoscope,
+  Heart,
+  Droplet,
+  Settings,
+  Clock
 } from 'lucide-react'
 import  NotificationBell from '@/components/Consultation/NotificationBell' // ✅ Named import
 import { cn, getInitials } from '@/lib/utils'
@@ -19,7 +23,7 @@ import { cn, getInitials } from '@/lib/utils'
 const supabase = createClient()
 
 interface DashboardLayoutProps {
-  userType: 'patient' | 'doctor'
+  userType: 'patient' | 'doctor' | 'donor'
   user: any
   userProfile: any
   activeTab: string
@@ -48,21 +52,35 @@ function DashboardLayoutComponent({
   console.log('🏠 DashboardLayout RENDERED, userId:', userId?.substring(0, 8))
   
   const isDoctor = userType === 'doctor'
+  const isDonor = userType === 'donor'
   
   // ✅ MEMOIZE EVERYTHING
-  const navItems = useMemo(() => isDoctor ? [
-    { id: 'overview', name: 'Overview', icon: BarChart3 },
-    { id: 'consultations', name: 'Consultation', icon: Video },
-    { id: 'blood-smear', name: 'Blood Smear', icon: Activity },
-    { id: 'reports', name: 'Reports', icon: FileText },
-    { id: 'profile', name: 'Profile', icon: UserCheck },
-  ] : [
-    { id: 'overview', name: 'Overview', icon: BarChart3 },
-    { id: 'consultations', name: 'Consultations', icon: Calendar },
-    { id: 'symptoms', name: 'Symptoms', icon: Activity },
-    { id: 'records', name: 'Records', icon: FileText },
-    { id: 'profile', name: 'Profile', icon: User },
-  ], [isDoctor])
+  const navItems = useMemo(() => {
+    if (isDoctor) {
+      return [
+        { id: 'overview', name: 'Overview', icon: BarChart3 },
+        { id: 'consultations', name: 'Consultation', icon: Video },
+        { id: 'blood-smear', name: 'Blood Smear', icon: Activity },
+        { id: 'reports', name: 'Reports', icon: FileText },
+        { id: 'profile', name: 'Profile', icon: UserCheck },
+      ]
+    }
+    if (isDonor) {
+      return [
+        { id: 'overview', name: 'Overview', icon: BarChart3 },
+        { id: 'profile', name: 'Profile', icon: User },
+        { id: 'donations', name: 'My Donations', icon: Clock },
+      ]
+    }
+    return [
+      { id: 'overview', name: 'Overview', icon: BarChart3 },
+      { id: 'consultations', name: 'Consultations', icon: Calendar },
+      { id: 'symptoms', name: 'Symptoms', icon: Activity },
+      { id: 'records', name: 'Records', icon: FileText },
+      { id: 'find-donors', name: 'Find Donors', icon: Heart },
+      { id: 'profile', name: 'Profile', icon: User },
+    ]
+  }, [isDoctor, isDonor])
 
   // ✅ Profile image URL processing
   const profilePictureUrl = useMemo(() => {
@@ -90,7 +108,7 @@ function DashboardLayoutComponent({
   // ✅ Profile picture rendering
   const renderProfilePicture = useMemo(() => {
     if (!profilePictureUrl) {
-      const initials = getInitials(user?.full_name || (isDoctor ? 'Doctor' : 'Patient'))
+      const initials = getInitials(user?.full_name || (isDoctor ? 'Doctor' : isDonor ? 'Donor' : 'Patient'))
       return (
         <span className="flex items-center justify-center w-full h-full text-white font-semibold">
           {initials}
@@ -110,7 +128,7 @@ function DashboardLayoutComponent({
         onError={onProfileImageError}
       />
     )
-  }, [profilePictureUrl, user, isDoctor, onProfileImageError])
+  }, [profilePictureUrl, user, isDoctor, isDonor, onProfileImageError])
 
   // ✅ Handle tab change
   const handleTabChange = useCallback((tab: string) => {
@@ -125,22 +143,30 @@ function DashboardLayoutComponent({
             <div className="flex items-center gap-4">
               <div className={cn(
                 "p-2 rounded-xl shadow-lg",
-                isDoctor ? "bg-blue-600" : "bg-blue-600"
+                isDoctor ? "bg-blue-600" : isDonor ? "bg-blue-600" : "bg-blue-600"
               )}>
                 {isDoctor ? (
                   <Stethoscope className="w-7 h-7 text-white" />
+                ) : isDonor ? (
+                  <Droplet className="w-7 h-7 text-white fill-current" />
                 ) : (
                   <User className="w-7 h-7 text-white" />
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                  HemaAI {isDoctor ? 'Doctor' : 'Patient'} Portal
+                <h1 className={cn(
+                  "text-2xl font-bold bg-clip-text text-transparent",
+                  isDonor ? "bg-gradient-to-r from-blue-600 to-blue-800" : "bg-gradient-to-r from-blue-600 to-blue-800"
+                )}>
+                  HemaAI {isDoctor ? 'Doctor' : isDonor ? 'Donor' : 'Patient'} Portal
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Welcome, {isDoctor ? 'Dr.' : ''} {user?.full_name || (isDoctor ? 'Doctor' : 'Patient')}
+                  Welcome, {isDoctor ? 'Dr.' : ''} {user?.full_name || (isDoctor ? 'Doctor' : isDonor ? 'Donor' : 'Patient')}
                   {userProfile?.specialization && (
                     <span className="ml-2 text-blue-600">• {userProfile.specialization}</span>
+                  )}
+                  {userProfile?.blood_group && isDonor && (
+                    <span className="ml-2 text-blue-600 font-semibold text-xs bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">{userProfile.blood_group}</span>
                   )}
                 </p>
               </div>
@@ -160,18 +186,18 @@ function DashboardLayoutComponent({
               >
                 <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg overflow-hidden",
-                  isDoctor ? "bg-blue-600" : "bg-purple-600"
+                  isDoctor ? "bg-blue-600" : isDonor ? "bg-blue-600" : "bg-purple-600"
                 )}>
                   {renderProfilePicture}
                 </div>
                 <div className="hidden md:block text-right">
                   <p className="text-sm font-semibold text-gray-900">
-                    {isDoctor ? 'Dr.' : ''} {user?.full_name || (isDoctor ? 'Doctor' : 'Patient')}
+                    {isDoctor ? 'Dr.' : ''} {user?.full_name || (isDoctor ? 'Doctor' : isDonor ? 'Donor' : 'Patient')}
                   </p>
                   <p className="text-xs text-gray-600">
                     {isDoctor 
                       ? (userProfile?.specialization || 'Medical Professional')
-                      : 'Patient'
+                      : isDonor ? 'Blood Donor' : 'Patient'
                     }
                   </p>
                 </div>
@@ -193,10 +219,10 @@ function DashboardLayoutComponent({
                       key={item.id}
                       onClick={() => handleTabChange(item.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm",
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200",
                         activeTab === item.id
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-600 hover:bg-gray-50"
+                          ? (isDonor ? "bg-blue-50 text-blue-600 border-r-2 border-blue-600 font-semibold" : "bg-blue-600 text-white shadow-md")
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       )}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
