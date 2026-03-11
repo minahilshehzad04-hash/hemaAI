@@ -305,11 +305,19 @@ export default function BloodSmearDiagnosis() {
       const analysisDuration = (endTime - startTime) / 1000
       setAnalysisTime(analysisDuration)
 
+      let extractedDiagnosis = diagnosisData.diagnosis;
+      let extractedConfidence = diagnosisData.confidence || diagnosisData.accuracy || 0;
+
+      if (typeof extractedDiagnosis === 'object' && extractedDiagnosis !== null) {
+        extractedConfidence = extractedDiagnosis.confidence || extractedConfidence;
+        extractedDiagnosis = extractedDiagnosis.condition || extractedDiagnosis.diagnosis || 'Analysis Inconclusive';
+      }
+
       // Normalize the diagnosis data
       const normalizedDiagnosis = {
         success: diagnosisData.success !== false,
-        diagnosis: diagnosisData.diagnosis || diagnosisData.result || 'Analysis Inconclusive',
-        confidence: diagnosisData.confidence || diagnosisData.accuracy || 0,
+        diagnosis: extractedDiagnosis || diagnosisData.result || 'Analysis Inconclusive',
+        confidence: extractedConfidence,
         mm_detection_score: diagnosisData.mm_detection_score || diagnosisData.mm_score || 0,
         mm_indicators: diagnosisData.mm_indicators || [],
         correction_applied: diagnosisData.correction_applied || false,
